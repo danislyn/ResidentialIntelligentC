@@ -32,9 +32,10 @@ public class LoginFrame extends JFrame {
 	 * Create the frame.
 	 */
 	public LoginFrame() {
+		this.setTitle("智能小区住户服务");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
-		setBounds(100, 100, 310, 220);
+		setBounds(100, 100, 310, 270);
 		
 		contentPane = new LoginPane(this);
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));

@@ -12,7 +12,7 @@ public class Message implements Serializable {
 	public String sourceResident;  //from User
 	public String destUsername;  //dest User, "ADMIN" is special case
 	
-	public MessageType type;  //0: CHAT; 1: ALARM
+	public MessageType type;  //0: CHAT; 1: ALARM; 2: LOGIN
 	
 	public String content;
 	public Date createTime;
@@ -22,7 +22,11 @@ public class Message implements Serializable {
 	
 	@Override
 	public String toString(){
-		return sourceUsername + "(·¿ºÅ" + sourceResident + "): " + content + "        " + sdf.format(createTime);
+		return sourceUsername + "(·¿ºÅ" + sourceResident + "): " + content + "        " + getFormatTime();
+	}
+	
+	public String getFormatTime(){
+		return sdf.format(createTime);
 	}
 	
 }

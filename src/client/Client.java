@@ -1,10 +1,16 @@
 package client;
 
+import gui.InstantChatFrame;
+
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+import db.operation.MessageOperation;
+import db.operation.UserOperation;
+
 import beans.Message;
+import beans.MessageType;
 import beans.User;
 
 public class Client {
@@ -19,6 +25,8 @@ public class Client {
 	private ObjectOutputStream objOutput;
 	
 	private Thread listeningThread;
+	
+	private InstantChatFrame chatFrame;
 	
 	public Client(User user){
 		this.user = user;
@@ -49,6 +57,9 @@ public class Client {
 			objInput.close();
 			socket.close();
 			
+			//logout
+			UserOperation.logout(user.username);
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -59,6 +70,11 @@ public class Client {
 		try {
 			objOutput.writeObject(msg);
 			objOutput.flush();
+			
+			//save message
+			if(msg.type != MessageType.LOGIN){
+				MessageOperation.saveMessage(msg);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -75,11 +91,9 @@ public class Client {
 				
 				while(true){
 					msg = (Message) objInput.readObject();
-					
 					if(msg != null){
-						System.out.println(msg.toString());
-						//TODO
-						
+						InstantChatFrame chatFrame = startP2P();
+						chatFrame.refreshContent(msg);
 					}
 				}
 				
@@ -94,14 +108,32 @@ public class Client {
 	
 	
 	//=====================================================
+	public void sendLoginMessage(){
+		Message msg = ClientUtil.getLoginMessage(user);
+		sendRequest(msg);
+	}
+	
+	public InstantChatFrame startP2P(){
+		if(chatFrame == null){
+			chatFrame = new InstantChatFrame(this);
+		}
+		chatFrame.setVisible(true);
+		return chatFrame;
+	}
+	
+	
+	//=====================================================
 	//¿Í»§¶Ë²Ù×÷
 	public void opAlarm(){
 		Message msg = ClientUtil.getAlarmMessage(user);
 		sendRequest(msg);
 	}
 	
-	
-	
+	public Message opChatMessage(String content){
+		Message msg = ClientUtil.getChatMessage(user, content);
+		sendRequest(msg);
+		return msg;
+	}
 	
 
 	

@@ -10,45 +10,9 @@ import beans.User;
 import db.connection.ConnectionStatement;
 import db.connection.PublicConnection;
 
-public class UserOperation{
+public class UserOperation extends DBOperation{
 
-	//与数据库取得连接，初始化statement
-	private void open(ConnectionStatement connectionStatement){
-		try {
-			//与数据库取得连接，设置最大等待时间为1000毫秒
-			connectionStatement.connection = PublicConnection.getConnection();
-			
-			//初始化statement
-			if(connectionStatement.connection != null){
-				connectionStatement.statement = connectionStatement.connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-			}
-			else{
-				System.out.println("no available connection in ConnectionPool, wait......");
-			}
-		}catch(SQLException e){			
-			System.out.println("Exception when open().....");
-			e.printStackTrace();
-		}
-			
-	}
-	
-	//归还Connection
-	private void close(ConnectionStatement connectionStatement){
-		if(connectionStatement.statement != null)
-			try {
-				connectionStatement.statement.close();
-			} catch (SQLException e) {
-				System.out.println("Exception when close().....");
-				e.printStackTrace();			
-			}
-		
-		if(connectionStatement.connection != null)
-			PublicConnection.freeConnection(connectionStatement.connection);
-	}
-	
-	
-
-	public User loginCheck(String username, String password) {
+	public static User loginCheck(String username, String password) {
 		ConnectionStatement connStmt = new ConnectionStatement();
 		ResultSet rs = null;
 		open(connStmt);
@@ -66,16 +30,16 @@ public class UserOperation{
 					user.id = rs.getInt("id");
 					user.username = rs.getString("username");
 					user.password = rs.getString("password");
-					user.resident = user.username;
+					user.resident = user.username;  //暂时和username相同
 					
-					//TODO
+					Date now = new Date();
+					user.online = 1;
+					user.lastLogin = now;
+					
 					//更新在线状态
-					
-//					java.util.Date date = new Date();
-//					java.sql.Timestamp time = new Timestamp(date.getTime());
-//					
-//					sqlString = "insert into " + onlineUserTable + " (username, location) values('" + username + "', " + location + ")";
-//					connStmt.statement.executeUpdate(sqlString);
+					Timestamp ts = new Timestamp(now.getTime());
+					sqlString = "update user set online=1, last_login='" + ts + "' where id=" + user.id;
+					connStmt.statement.executeUpdate(sqlString);
 				}		
 			} catch (SQLException e) {
 				user = null;
@@ -89,14 +53,14 @@ public class UserOperation{
 	}
 
 	
-	public boolean logout(String username) {
+	public static boolean logout(String username) {
 		ConnectionStatement connStmt = new ConnectionStatement();
 		open(connStmt);
 		
 		boolean result = false;
 		
 		if(connStmt.connection != null){
-			String sqlString = "";
+			String sqlString = "update user set online=0 where username='" + username + "'";
 			
 			try {
 				connStmt.statement.executeUpdate(sqlString);
